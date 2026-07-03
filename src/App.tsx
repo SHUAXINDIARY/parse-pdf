@@ -30,6 +30,20 @@ type PositionedTextItem = {
   height: number;
 };
 
+type ResumeLink = {
+  id: string;
+  url: string;
+  label: string;
+  page: number;
+  rect: [number, number, number, number];
+};
+
+type PdfAnnotation = {
+  url?: string | null;
+  unsafeUrl?: string;
+  rect?: number[];
+};
+
 type ResumeLine = {
   id: string;
   page: number;
@@ -37,6 +51,7 @@ type ResumeLine = {
   x: number;
   y: number;
   height: number;
+  links: ResumeLink[];
 };
 
 type ResumeBlockType = 'profile' | 'section' | 'content';
@@ -50,6 +65,7 @@ type ResumeBlock = {
   content: string;
   originalContent: string;
   indent: number;
+  links: ResumeLink[];
   isOpen: boolean;
 };
 
@@ -146,6 +162,61 @@ const buildLineText = (items: PositionedTextItem[]) => {
   );
 };
 
+const getAnnotationUrl = (annotation: PdfAnnotation) => {
+  return annotation.url || annotation.unsafeUrl || '';
+};
+
+const normalizeAnnotationRect = (rect: number[]): [number, number, number, number] => {
+  const [x1 = 0, y1 = 0, x2 = 0, y2 = 0] = rect;
+  return [Math.min(x1, x2), Math.min(y1, y2), Math.max(x1, x2), Math.max(y1, y2)];
+};
+
+const extractPageLinks = (annotations: PdfAnnotation[], pageNumber: number) => {
+  return annotations
+    .map((annotation, index) => {
+      const url = getAnnotationUrl(annotation);
+      if (!url || !annotation.rect || annotation.rect.length < 4) {
+        return null;
+      }
+
+      return {
+        id: `${pageNumber}-link-${index}`,
+        url,
+        label: url,
+        page: pageNumber,
+        rect: normalizeAnnotationRect(annotation.rect),
+      };
+    })
+    .filter((link): link is ResumeLink => Boolean(link));
+};
+
+const isLinkOnLine = (link: ResumeLink, line: ResumeLine) => {
+  const [, linkBottom, , linkTop] = link.rect;
+  const lineBottom = line.y - line.height * 0.3;
+  const lineTop = line.y + line.height * 1.2;
+  return linkTop >= lineBottom && linkBottom <= lineTop;
+};
+
+const attachLinksToLines = (lines: ResumeLine[], links: ResumeLink[]) => {
+  if (links.length === 0) {
+    return lines;
+  }
+
+  return lines.map((line) => {
+    const lineLinks = links
+      .filter((link) => isLinkOnLine(link, line))
+      .map((link) => ({
+        ...link,
+        label: line.text || link.url,
+      }));
+
+    return {
+      ...line,
+      links: lineLinks,
+    };
+  });
+};
+
 const buildPageLines = (items: TextItem[], pageNumber: number) => {
   const positionedItems = items
     .map((item) => ({
@@ -187,6 +258,7 @@ const buildPageLines = (items: TextItem[], pageNumber: number) => {
       x: Math.min(...line.map((item) => item.x)),
       y: line[0].y,
       height: Math.max(...line.map((item) => item.height)),
+      links: [],
     }))
     .filter((line) => line.text);
 };
@@ -199,6 +271,7 @@ const createBlock = (
 ): ResumeBlock => {
   const content = lines.map((line) => line.text).join('\n');
   const indent = Math.min(...lines.map((line) => line.x));
+  const links = lines.flatMap((line) => line.links);
 
   return {
     id: `${lines[0].page}-${type}-${index}-${Math.round(lines[0].y)}`,
@@ -209,6 +282,7 @@ const createBlock = (
     content,
     originalContent: content,
     indent,
+    links,
     isOpen: type !== 'section',
   };
 };
@@ -252,7 +326,13 @@ const parseSemanticBlocks = (lines: ResumeLine[]) => {
 
 const stringifyBlocks = (blocks: ResumeBlock[]) => {
   return blocks
-    .map((block) => (block.type === 'section' ? `# ${block.content}` : block.content))
+    .map((block) => {
+      const linkText =
+        block.links.length > 0
+          ? `\n${block.links.map((link) => `[${link.label}](${link.url})`).join('\n')}`
+          : '';
+      return block.type === 'section' ? `# ${block.content}${linkText}` : `${block.content}${linkText}`;
+    })
     .join('\n\n');
 };
 
@@ -263,13 +343,16 @@ const extractPdfBlocks = async (file: File): Promise<ParsedPdf> => {
 
   for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
     const page = await document.getPage(pageNumber);
-    const textContent = await page.getTextContent();
-    allLines.push(
-      ...buildPageLines(
-        textContent.items.filter((item): item is TextItem => 'str' in item),
-        pageNumber,
-      ),
+    const [textContent, annotations] = await Promise.all([
+      page.getTextContent(),
+      page.getAnnotations(),
+    ]);
+    const pageLines = buildPageLines(
+      textContent.items.filter((item): item is TextItem => 'str' in item),
+      pageNumber,
     );
+    const pageLinks = extractPageLinks(annotations as PdfAnnotation[], pageNumber);
+    allLines.push(...attachLinksToLines(pageLines, pageLinks));
   }
 
   const blocks = parseSemanticBlocks(allLines);
@@ -308,6 +391,31 @@ const createPdfPageSize = (canvas: HTMLCanvasElement) => {
     width: pageWidth,
     height: (canvas.height * pageWidth) / canvas.width,
   };
+};
+
+const addPageLinks = (pdf: jsPDF, pageElement: HTMLElement, pageSize: ReturnType<typeof createPdfPageSize>) => {
+  const pageRect = pageElement.getBoundingClientRect();
+  const scaleX = pageSize.width / pageRect.width;
+  const scaleY = pageSize.height / pageRect.height;
+  const linkElements = Array.from(
+    pageElement.querySelectorAll<HTMLElement>('.link-export-target'),
+  );
+
+  linkElements.forEach((linkElement) => {
+    const url = linkElement.dataset.linkUrl;
+    if (!url) {
+      return;
+    }
+
+    const linkRect = linkElement.getBoundingClientRect();
+    pdf.link(
+      (linkRect.left - pageRect.left) * scaleX,
+      (linkRect.top - pageRect.top) * scaleY,
+      linkRect.width * scaleX,
+      linkRect.height * scaleY,
+      { url },
+    );
+  });
 };
 
 const App = () => {
@@ -379,6 +487,23 @@ const App = () => {
     });
   };
 
+  const updateBlockLink = (blockId: string, linkId: string, url: string) => {
+    setBlocks((current) => {
+      const nextBlocks = current.map((block) =>
+        block.id === blockId
+          ? {
+              ...block,
+              links: block.links.map((link) =>
+                link.id === linkId ? { ...link, url } : link,
+              ),
+            }
+          : block,
+      );
+      setRawText(stringifyBlocks(nextBlocks));
+      return nextBlocks;
+    });
+  };
+
   const toggleBlock = (id: string) => {
     setBlocks((current) =>
       current.map((block) =>
@@ -435,6 +560,7 @@ const App = () => {
         }
 
         pdf.addImage(imageData, 'PNG', 0, 0, pageSize.width, pageSize.height);
+        addPageLinks(pdf, pageElement, pageSize);
       }
 
       pdf?.save(createExportFileName(fileName));
@@ -583,6 +709,19 @@ const App = () => {
                             <div className="export-text export-text--section">
                               {block.content}
                             </div>
+                            {block.links.length > 0 ? (
+                              <div className="export-links">
+                                {block.links.map((link) => (
+                                  <span
+                                    className="link-export-target"
+                                    data-link-url={link.url}
+                                    key={link.id}
+                                  >
+                                    {link.url}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : null}
                           </>
                         ) : (
                           <>
@@ -611,7 +750,42 @@ const App = () => {
                                 )}
                               />
                             ) : null}
+                            {block.isOpen && block.links.length > 0 ? (
+                              <div className="link-editor-list">
+                                {block.links.map((link) => (
+                                  <div className="link-editor-row" key={link.id}>
+                                    <span>{link.label}</span>
+                                    <input
+                                      value={link.url}
+                                      onChange={(event) =>
+                                        updateBlockLink(
+                                          block.id,
+                                          link.id,
+                                          event.target.value,
+                                        )
+                                      }
+                                    />
+                                    <a href={link.url} target="_blank" rel="noreferrer">
+                                      预览
+                                    </a>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : null}
                             <div className="export-text">{block.content}</div>
+                            {block.links.length > 0 ? (
+                              <div className="export-links">
+                                {block.links.map((link) => (
+                                  <span
+                                    className="link-export-target"
+                                    data-link-url={link.url}
+                                    key={link.id}
+                                  >
+                                    {link.url}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : null}
                           </>
                         )}
                       </section>

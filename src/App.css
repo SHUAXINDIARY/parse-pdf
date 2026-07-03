@@ -383,7 +383,61 @@ h2 {
   border-color: #0f6ec7;
 }
 
+.link-editor-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  border: 1px solid #dbe8f5;
+  border-radius: 8px;
+  padding: 10px;
+  background: #f6faff;
+}
+
+.link-editor-row {
+  display: grid;
+  grid-template-columns: minmax(84px, 0.28fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.link-editor-row span {
+  overflow: hidden;
+  color: #53677f;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link-editor-row input {
+  min-width: 0;
+  border: 1px solid #cddbed;
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: #172133;
+  background: #fff;
+  font: inherit;
+  font-size: 0.86rem;
+  outline: none;
+}
+
+.link-editor-row input:focus {
+  border-color: #0f6ec7;
+  box-shadow: 0 0 0 3px rgba(15, 110, 199, 0.12);
+}
+
+.link-editor-row a {
+  color: #0f6ec7;
+  font-size: 0.84rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
 .export-text {
+  display: none;
+}
+
+.export-links {
   display: none;
 }
 
@@ -395,17 +449,29 @@ h2 {
 .is-exporting .page-marker,
 .is-exporting .semantic-trigger,
 .is-exporting .semantic-editor,
-.is-exporting .section-title-input {
+.is-exporting .section-title-input,
+.is-exporting .link-editor-list {
   display: none;
 }
 
-.is-exporting .export-text {
+.is-exporting .export-text,
+.is-exporting .export-links {
   display: block;
   color: #182235;
   font-size: 0.9rem;
   font-weight: 500;
   line-height: 1.65;
   white-space: pre-wrap;
+}
+
+.is-exporting .export-links {
+  margin-top: 2px;
+  color: #0f6ec7;
+  text-decoration: underline;
+}
+
+.is-exporting .link-export-target {
+  display: block;
 }
 
 .is-exporting .export-text--section {
@@ -494,5 +560,9 @@ textarea:focus {
 
   .indent-2 {
     margin-left: 28px;
+  }
+
+  .link-editor-row {
+    grid-template-columns: 1fr;
   }
 }
