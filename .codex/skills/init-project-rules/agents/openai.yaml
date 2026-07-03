@@ -1,0 +1,4 @@
+interface:
+  display_name: "Init Project Rules"
+  short_description: "Initialize Cursor and Codex rules with project facts"
+  default_prompt: "Use $init-project-rules to initialize Cursor and Codex project rules for a React or Vue app, including the current directory structure and common SDKs/libraries inferred from package.json."

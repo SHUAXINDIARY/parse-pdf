@@ -8,6 +8,12 @@ importers:
 
   .:
     dependencies:
+      html2canvas:
+        specifier: ^1.4.1
+        version: 1.4.1
+      jspdf:
+        specifier: ^4.2.1
+        version: 4.2.1
       lucide-react:
         specifier: ^1.23.0
         version: 1.23.0(react@19.2.7)
@@ -23,10 +29,10 @@ importers:
     devDependencies:
       '@rsbuild/core':
         specifier: ^2.1.4
-        version: 2.1.4
+        version: 2.1.4(core-js@3.49.0)
       '@rsbuild/plugin-react':
         specifier: ^2.1.0
-        version: 2.1.0(@rsbuild/core@2.1.4)(@rspack/core@2.1.2(@swc/helpers@0.5.23))
+        version: 2.1.0(@rsbuild/core@2.1.4(core-js@3.49.0))(@rspack/core@2.1.2(@swc/helpers@0.5.23))
       '@types/node':
         specifier: ^24.13.2
         version: 24.13.2
@@ -41,6 +47,10 @@ importers:
         version: 6.0.3
 
 packages:
+
+  '@babel/runtime@7.29.7':
+    resolution: {integrity: sha512-Nq8OhGWiZIZGV6hLHoyAKLLcJihP/xFeBMGJoUrxTX2psI8dCifzLhZISFb+VWS3wFMRDmCGw5R+dOySCqPLhw==}
+    engines: {node: '>=6.9.0'}
 
   '@emnapi/core@1.11.1':
     resolution: {integrity: sha512-RSvbQmHzdKzNsLYa/wHrbc3KN4sYLKAdPZxqiM2HATqv/SBk2/ENSHpvXGaLOMcsAyz0poEGqkmmKYG3OWiJEQ==}
@@ -237,6 +247,12 @@ packages:
   '@types/node@24.13.2':
     resolution: {integrity: sha512-fRa09kZTgu8o71KFcDjUFuc7F+dEbZYZmkI0mg5YBTRs0yMKjYHsq/c0urDKeDb+D5qVgXOdFcuu+DZPKOITwA==}
 
+  '@types/pako@2.0.4':
+    resolution: {integrity: sha512-VWDCbrLeVXJM9fihYodcLiIv0ku+AlOa/TQ1SvYOaBuyrSKgEcro95LJyIsJ4vSo6BXIxOKxiJAat04CmST9Fw==}
+
+  '@types/raf@3.4.3':
+    resolution: {integrity: sha512-c4YAvMedbPZ5tEyxzQdMoOhhJ4RD3rngZIdwC2/qDN3d7JpEhB6fiBRKVY1lg5B7Wk+uPBjn5f39j1/2MY1oOw==}
+
   '@types/react-dom@19.2.3':
     resolution: {integrity: sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==}
     peerDependencies:
@@ -245,17 +261,62 @@ packages:
   '@types/react@19.2.17':
     resolution: {integrity: sha512-MXfmqaVPEVgkBT/aY0aGCkRWWtByiYQXo3xdQ8r5RzuFrPiRn8Gar2tQdXSUQ2GKV3bkXckek89V8wQBY2Q/Aw==}
 
+  '@types/trusted-types@2.0.7':
+    resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
+
+  base64-arraybuffer@1.0.2:
+    resolution: {integrity: sha512-I3yl4r9QB5ZRY3XuJVEPfc2XhZO6YweFPI+UovAzn+8/hb3oJ6lnysaFcjVpkCPfVWFUDvoZ8kmVDP7WyRtYtQ==}
+    engines: {node: '>= 0.6.0'}
+
+  canvg@3.0.11:
+    resolution: {integrity: sha512-5ON+q7jCTgMp9cjpu4Jo6XbvfYwSB2Ow3kzHKfIyJfaCAOHLbdKPQqGKgfED/R5B+3TFFfe8pegYA+b423SRyA==}
+    engines: {node: '>=10.0.0'}
+
+  core-js@3.49.0:
+    resolution: {integrity: sha512-es1U2+YTtzpwkxVLwAFdSpaIMyQaq0PBgm3YD1W3Qpsn1NAmO3KSgZfu+oGSWVu6NvLHoHCV/aYcsE5wiB7ALg==}
+
+  css-line-break@2.1.0:
+    resolution: {integrity: sha512-FHcKFCZcAha3LwfVBhCQbW2nCNbkZXn7KVUJcsT5/P8YmfsVja0FMPJr0B903j/E69HUphKiV9iQArX8SDYA4w==}
+
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
+
+  dompurify@3.4.11:
+    resolution: {integrity: sha512-zhlUV12GsaRzMsf9q5M254YhA4+VuF0fG+QFqu6aYpoGlKtz+w8//jBcGVYBgQkR5GHjUomejY84AV+/uPbWdw==}
+
+  fast-png@6.4.0:
+    resolution: {integrity: sha512-kAqZq1TlgBjZcLr5mcN6NP5Rv4V2f22z00c3g8vRrwkcqjerx7BEhPbOnWCPqaHUl2XWQBJQvOT/FQhdMT7X/Q==}
+
+  fflate@0.8.3:
+    resolution: {integrity: sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA==}
+
+  html2canvas@1.4.1:
+    resolution: {integrity: sha512-fPU6BHNpsyIhr8yyMpTLLxAbkaK8ArIBcmZIRiBLiDhjeqvXolaEmDGmELFuX9I4xDcaKKcJl+TKZLqruBbmWA==}
+    engines: {node: '>=8.0.0'}
+
+  iobuffer@5.4.0:
+    resolution: {integrity: sha512-DRebOWuqDvxunfkNJAlc3IzWIPD5xVxwUNbHr7xKB8E6aLJxIPfNX3CoMJghcFjpv6RWQsrcJbghtEwSPoJqMA==}
+
+  jspdf@4.2.1:
+    resolution: {integrity: sha512-YyAXyvnmjTbR4bHQRLzex3CuINCDlQnBqoSYyjJwTP2x9jDLuKDzy7aKUl0hgx3uhcl7xzg32agn5vlie6HIlQ==}
 
   lucide-react@1.23.0:
     resolution: {integrity: sha512-38BpJcD0JhFosxHApP/BYsBetLpQFRoTRzEzstM/XCc3jsAG7wqaY1lgVwxiUe3xqYE+lNxo2PkCmYwXWrwwIw==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
+  pako@2.2.0:
+    resolution: {integrity: sha512-zJq6RP/5q+TO2OpFV3FHzlPnFjmkb7Nc99a5SNjJE+uu/PkpChs+NIZSSzbBoD+6kjiISXjfYdwj1ZRQ81dz/w==}
+
   pdfjs-dist@6.1.200:
     resolution: {integrity: sha512-o8MolyzirkkLrcdsae/HEOiIcXWI7DS5zGpvqW8xTC2YUsW30rltFw2bDGvw/fskUdEMrQm2br68jzDS5BH2vw==}
     engines: {node: '>=22.13.0 || >=24'}
+
+  performance-now@2.1.0:
+    resolution: {integrity: sha512-7EAHlyLHI56VEIdK57uwHdHKIaAGbnXPiw0yWbarQZOKaKpvUIgW0jWRVLiatnM+XXlSwsanIBH/hzGMJulMow==}
+
+  raf@3.4.1:
+    resolution: {integrity: sha512-Sq4CW4QhwOHE8ucn6J34MqtZCeWFP2aQSmrlroYgqAV1PjStIhJXxYuTgUIfkEk7zTLjmIjLmU5q+fbD1NnOJA==}
 
   react-dom@19.2.7:
     resolution: {integrity: sha512-t0BRVXvbiE/o20Hfw669rLbMCDWtYZLvmJigy2f0MxsXF+71pxhR3xOkspmsO8h3ZlNzyibAmtCa3l4lYKk6gQ==}
@@ -270,8 +331,26 @@ packages:
     resolution: {integrity: sha512-HNe9WslTbXmFK8o8cmwgAeJFSBvt1bPdHCVKtaaV+WlAN36mpT4hcRpwbf3fY56ar2oIXzsBpOAiIRHAdY0OlQ==}
     engines: {node: '>=0.10.0'}
 
+  regenerator-runtime@0.13.11:
+    resolution: {integrity: sha512-kY1AZVr2Ra+t+piVaJ4gxaFaReZVH40AKNo7UCX6W+dEwBo/2oZJzqfuN1qLq1oL45o56cPaTXELwrTh8Fpggg==}
+
+  rgbcolor@1.0.1:
+    resolution: {integrity: sha512-9aZLIrhRaD97sgVhtJOW6ckOEh6/GnvQtdVNfdZ6s67+3/XwLS9lBcQYzEEhYVeUowN7pRzMLsyGhK2i/xvWbw==}
+    engines: {node: '>= 0.8.15'}
+
   scheduler@0.27.0:
     resolution: {integrity: sha512-eNv+WrVbKu1f3vbYJT/xtiF5syA5HPIMtf9IgY/nKg0sWqzAUEvqY/xm7OcZc/qafLx/iO9FgOmeSAp4v5ti/Q==}
+
+  stackblur-canvas@2.7.0:
+    resolution: {integrity: sha512-yf7OENo23AGJhBriGx0QivY5JP6Y1HbrrDI6WLt6C5auYZXlQrheoY8hD4ibekFKz1HOfE48Ww8kMWMnJD/zcQ==}
+    engines: {node: '>=0.1.14'}
+
+  svg-pathdata@6.0.3:
+    resolution: {integrity: sha512-qsjeeq5YjBZ5eMdFuUa4ZosMLxgr5RZ+F+Y1OrDhuOCEInRMA3x74XdBtggJcj9kOeInz0WE+LgCPDkZFlBYJw==}
+    engines: {node: '>=12.0.0'}
+
+  text-segmentation@1.0.3:
+    resolution: {integrity: sha512-iOiPUo/BGnZ6+54OsWxZidGCsdU8YbE4PSpdPinp7DeMtUJNJBoJ/ouUSTJjHkh1KntHaltHl/gDs2FC4i5+Nw==}
 
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
@@ -284,7 +363,12 @@ packages:
   undici-types@7.18.2:
     resolution: {integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==}
 
+  utrie@1.0.2:
+    resolution: {integrity: sha512-1MLa5ouZiOmQzUbjbu9VmjLzn1QLXBhwpUa7kdLUQK+KQ5KA9I1vk5U4YHe/X2Ch7PYnJfWuWT+VbuxbGwljhw==}
+
 snapshots:
+
+  '@babel/runtime@7.29.7': {}
 
   '@emnapi/core@1.11.1':
     dependencies:
@@ -357,19 +441,21 @@ snapshots:
       '@tybys/wasm-util': 0.10.3
     optional: true
 
-  '@rsbuild/core@2.1.4':
+  '@rsbuild/core@2.1.4(core-js@3.49.0)':
     dependencies:
       '@rspack/core': 2.1.2(@swc/helpers@0.5.23)
       '@swc/helpers': 0.5.23
+    optionalDependencies:
+      core-js: 3.49.0
     transitivePeerDependencies:
       - '@module-federation/runtime-tools'
 
-  '@rsbuild/plugin-react@2.1.0(@rsbuild/core@2.1.4)(@rspack/core@2.1.2(@swc/helpers@0.5.23))':
+  '@rsbuild/plugin-react@2.1.0(@rsbuild/core@2.1.4(core-js@3.49.0))(@rspack/core@2.1.2(@swc/helpers@0.5.23))':
     dependencies:
       '@rspack/plugin-react-refresh': 2.0.2(@rspack/core@2.1.2(@swc/helpers@0.5.23))(react-refresh@0.18.0)
       react-refresh: 0.18.0
     optionalDependencies:
-      '@rsbuild/core': 2.1.4
+      '@rsbuild/core': 2.1.4(core-js@3.49.0)
     transitivePeerDependencies:
       - '@rspack/core'
 
@@ -453,6 +539,11 @@ snapshots:
     dependencies:
       undici-types: 7.18.2
 
+  '@types/pako@2.0.4': {}
+
+  '@types/raf@3.4.3':
+    optional: true
+
   '@types/react-dom@19.2.3(@types/react@19.2.17)':
     dependencies:
       '@types/react': 19.2.17
@@ -461,15 +552,80 @@ snapshots:
     dependencies:
       csstype: 3.2.3
 
+  '@types/trusted-types@2.0.7':
+    optional: true
+
+  base64-arraybuffer@1.0.2: {}
+
+  canvg@3.0.11:
+    dependencies:
+      '@babel/runtime': 7.29.7
+      '@types/raf': 3.4.3
+      core-js: 3.49.0
+      raf: 3.4.1
+      regenerator-runtime: 0.13.11
+      rgbcolor: 1.0.1
+      stackblur-canvas: 2.7.0
+      svg-pathdata: 6.0.3
+    optional: true
+
+  core-js@3.49.0:
+    optional: true
+
+  css-line-break@2.1.0:
+    dependencies:
+      utrie: 1.0.2
+
   csstype@3.2.3: {}
+
+  dompurify@3.4.11:
+    optionalDependencies:
+      '@types/trusted-types': 2.0.7
+    optional: true
+
+  fast-png@6.4.0:
+    dependencies:
+      '@types/pako': 2.0.4
+      iobuffer: 5.4.0
+      pako: 2.2.0
+
+  fflate@0.8.3: {}
+
+  html2canvas@1.4.1:
+    dependencies:
+      css-line-break: 2.1.0
+      text-segmentation: 1.0.3
+
+  iobuffer@5.4.0: {}
+
+  jspdf@4.2.1:
+    dependencies:
+      '@babel/runtime': 7.29.7
+      fast-png: 6.4.0
+      fflate: 0.8.3
+    optionalDependencies:
+      canvg: 3.0.11
+      core-js: 3.49.0
+      dompurify: 3.4.11
+      html2canvas: 1.4.1
 
   lucide-react@1.23.0(react@19.2.7):
     dependencies:
       react: 19.2.7
 
+  pako@2.2.0: {}
+
   pdfjs-dist@6.1.200:
     optionalDependencies:
       '@napi-rs/canvas': 1.0.2
+
+  performance-now@2.1.0:
+    optional: true
+
+  raf@3.4.1:
+    dependencies:
+      performance-now: 2.1.0
+    optional: true
 
   react-dom@19.2.7(react@19.2.7):
     dependencies:
@@ -480,10 +636,30 @@ snapshots:
 
   react@19.2.7: {}
 
+  regenerator-runtime@0.13.11:
+    optional: true
+
+  rgbcolor@1.0.1:
+    optional: true
+
   scheduler@0.27.0: {}
+
+  stackblur-canvas@2.7.0:
+    optional: true
+
+  svg-pathdata@6.0.3:
+    optional: true
+
+  text-segmentation@1.0.3:
+    dependencies:
+      utrie: 1.0.2
 
   tslib@2.8.1: {}
 
   typescript@6.0.3: {}
 
   undici-types@7.18.2: {}
+
+  utrie@1.0.2:
+    dependencies:
+      base64-arraybuffer: 1.0.2

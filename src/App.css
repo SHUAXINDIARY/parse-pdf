@@ -241,6 +241,31 @@ h2 {
   background: #dfeaf5;
 }
 
+.toolbar button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.toolbar .export-action {
+  color: #fff;
+  background: #0f6ec7;
+}
+
+.toolbar .export-action:hover {
+  background: #0a5eac;
+}
+
+.inline-error {
+  margin-bottom: 12px;
+  border: 1px solid #ffd6cf;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #a0372f;
+  background: #fff6f4;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
 .resume-pages {
   display: grid;
   gap: 18px;
@@ -356,6 +381,38 @@ h2 {
 
 .semantic-editor:focus {
   border-color: #0f6ec7;
+}
+
+.export-text {
+  display: none;
+}
+
+.is-exporting .resume-page {
+  border: 0;
+  box-shadow: none;
+}
+
+.is-exporting .page-marker,
+.is-exporting .semantic-trigger,
+.is-exporting .semantic-editor,
+.is-exporting .section-title-input {
+  display: none;
+}
+
+.is-exporting .export-text {
+  display: block;
+  color: #182235;
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.is-exporting .export-text--section {
+  color: #111827;
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1.4;
 }
 
 textarea {

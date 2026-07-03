@@ -1,11 +1,14 @@
 import {
   ChevronDown,
   ChevronRight,
+  Download,
   FileText,
   LoaderCircle,
   Save,
   Upload,
 } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import { useMemo, useRef, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs';
 import type { TextItem } from 'pdfjs-dist/types/src/display/api';
@@ -17,6 +20,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 ).toString();
 
 type ParseState = 'idle' | 'reading' | 'done' | 'error';
+type ExportState = 'idle' | 'exporting' | 'error';
 
 type PositionedTextItem = {
   str: string;
@@ -293,13 +297,28 @@ const getBlockIndentLevel = (block: ResumeBlock) => {
   return 0;
 };
 
+const createExportFileName = (name: string) => {
+  const baseName = name.replace(/\.pdf$/i, '').trim() || 'resume';
+  return `${baseName}-edited.pdf`;
+};
+
+const createPdfPageSize = (canvas: HTMLCanvasElement) => {
+  const pageWidth = 210;
+  return {
+    width: pageWidth,
+    height: (canvas.height * pageWidth) / canvas.width,
+  };
+};
+
 const App = () => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const pagesRef = useRef<HTMLDivElement>(null);
   const [fileName, setFileName] = useState('');
   const [blocks, setBlocks] = useState<ResumeBlock[]>([]);
   const [rawText, setRawText] = useState('');
   const [pageCount, setPageCount] = useState(0);
   const [parseState, setParseState] = useState<ParseState>('idle');
+  const [exportState, setExportState] = useState<ExportState>('idle');
   const [error, setError] = useState('');
 
   const editedCount = useMemo(
@@ -376,6 +395,56 @@ const App = () => {
     setBlocks((current) =>
       current.map((block) => ({ ...block, isOpen: block.type === 'section' })),
     );
+  };
+
+  const exportPdf = async () => {
+    const pageElements = Array.from(
+      pagesRef.current?.querySelectorAll<HTMLElement>('.resume-page') ?? [],
+    );
+
+    if (pageElements.length === 0) {
+      return;
+    }
+
+    setExportState('exporting');
+    setError('');
+
+    document.body.classList.add('is-exporting');
+
+    try {
+      await document.fonts.ready;
+      let pdf: jsPDF | null = null;
+
+      for (const [index, pageElement] of pageElements.entries()) {
+        const canvas = await html2canvas(pageElement, {
+          backgroundColor: '#ffffff',
+          scale: Math.min(window.devicePixelRatio || 1, 2),
+          useCORS: true,
+        });
+        const imageData = canvas.toDataURL('image/png');
+        const pageSize = createPdfPageSize(canvas);
+
+        if (pdf) {
+          pdf.addPage([pageSize.width, pageSize.height], 'portrait');
+        } else {
+          pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: [pageSize.width, pageSize.height],
+          });
+        }
+
+        pdf.addImage(imageData, 'PNG', 0, 0, pageSize.width, pageSize.height);
+      }
+
+      pdf?.save(createExportFileName(fileName));
+      setExportState('idle');
+    } catch {
+      setExportState('error');
+      setError('PDF 导出失败，请稍后重试。');
+    } finally {
+      document.body.classList.remove('is-exporting');
+    }
   };
 
   return (
@@ -464,6 +533,20 @@ const App = () => {
                   <p>按语义块展开编辑，缩进和章节层级会贴近原 PDF。</p>
                 </div>
                 <div className="toolbar">
+                  <button
+                    className="export-action"
+                    disabled={exportState === 'exporting'}
+                    onClick={() => {
+                      void exportPdf();
+                    }}
+                  >
+                    {exportState === 'exporting' ? (
+                      <LoaderCircle className="spin" size={16} />
+                    ) : (
+                      <Download size={16} />
+                    )}
+                    {exportState === 'exporting' ? '导出中' : '导出 PDF'}
+                  </button>
                   <button onClick={expandAll}>
                     <ChevronDown size={16} />
                     全部展开
@@ -475,7 +558,11 @@ const App = () => {
                 </div>
               </div>
 
-              <div className="resume-pages">
+              {exportState === 'error' ? (
+                <div className="inline-error">{error}</div>
+              ) : null}
+
+              <div className="resume-pages" ref={pagesRef}>
                 {pages.map(({ page, blocks: pageBlocks }) => (
                   <article className="resume-page" key={page}>
                     <div className="page-marker">第 {page} 页</div>
@@ -485,11 +572,18 @@ const App = () => {
                         key={block.id}
                       >
                         {block.type === 'section' ? (
-                          <input
-                            className="section-title-input"
-                            value={block.content}
-                            onChange={(event) => updateBlock(block.id, event.target.value)}
-                          />
+                          <>
+                            <input
+                              className="section-title-input"
+                              value={block.content}
+                              onChange={(event) =>
+                                updateBlock(block.id, event.target.value)
+                              }
+                            />
+                            <div className="export-text export-text--section">
+                              {block.content}
+                            </div>
+                          </>
                         ) : (
                           <>
                             <button
@@ -517,6 +611,7 @@ const App = () => {
                                 )}
                               />
                             ) : null}
+                            <div className="export-text">{block.content}</div>
                           </>
                         )}
                       </section>
