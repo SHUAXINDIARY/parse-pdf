@@ -10,7 +10,7 @@ import {
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { useMemo, useRef, useState } from 'react';
-import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs';
+import * as pdfjsLib from 'pdfjs-dist';
 import type { TextItem } from 'pdfjs-dist/types/src/display/api';
 import './App.css';
 
@@ -540,7 +540,7 @@ const App = () => {
       await document.fonts.ready;
       let pdf: jsPDF | null = null;
 
-      for (const [index, pageElement] of pageElements.entries()) {
+      for (const pageElement of pageElements) {
         const canvas = await html2canvas(pageElement, {
           backgroundColor: '#ffffff',
           scale: Math.min(window.devicePixelRatio || 1, 2),
