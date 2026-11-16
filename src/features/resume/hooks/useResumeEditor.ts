@@ -1,6 +1,7 @@
 import { useMemo, useReducer, useRef } from 'react';
 import { extractPdfBlocks } from '../utils/extractPdfBlocks';
 import type { PdfSourcePage } from '../../../services/pdf/types';
+import { getPdfErrorMessage, getPdfErrorName, PdfReadError } from '../../../services/pdf/errors';
 import type { ParsedPdf, ParseState, ResumeBlock } from '../types';
 import { createTitle, stringifyBlocks } from '../utils/blocks';
 
@@ -126,9 +127,15 @@ export const useResumeEditor = () => {
       const result = await extractPdfBlocks(file);
       // 连续上传时只接受最近一次结果，避免旧图像覆盖新文档。
       if (requestId === requestIdRef.current) dispatch({ type: 'loaded', result });
-    } catch {
+    } catch (error) {
       if (requestId !== requestIdRef.current) return;
-      dispatch({ type: 'failed', error: 'PDF 解析失败，请确认文件没有加密或损坏。', clearDocument: true });
+      // 仅记录异常类型和失败位置，不把文件正文、原始错误消息写入日志。
+      console.error('PDF 导入失败', {
+        name: getPdfErrorName(error),
+        stage: error instanceof PdfReadError ? error.stage : 'document',
+        page: error instanceof PdfReadError ? error.page : 0,
+      });
+      dispatch({ type: 'failed', error: getPdfErrorMessage(error), clearDocument: true });
     }
   };
 

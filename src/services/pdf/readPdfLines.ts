@@ -1,6 +1,8 @@
 import * as pdfjsLib from 'pdfjs-dist';
 import type { TextItem, TextStyle } from 'pdfjs-dist/types/src/display/api';
 import type { PdfLine, PdfLink, PdfRect, PdfSourcePage } from './types';
+import { PdfReadError } from './errors';
+import type { PdfReadStage } from './errors';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.mjs',
@@ -24,6 +26,28 @@ type PdfAnnotation = {
   url?: string | null;
   unsafeUrl?: string;
   rect?: number[];
+};
+
+/** Type3 字体可能返回 NaN；空值合并无法处理它，必须检查有限数值。 */
+const getFontAscent = (style: TextStyle | undefined) => {
+  if (style && Number.isFinite(style.ascent) && style.ascent > 0) return style.ascent;
+  if (style && Number.isFinite(style.descent)) {
+    const ascent = 1 + style.descent;
+    if (ascent > 0) return ascent;
+  }
+  return 0.8;
+};
+
+/** 取色只处理画布内的有限矩形；页外文字仍保留默认颜色和文本。 */
+const getSampleArea = (bounds: PdfRect, canvas: HTMLCanvasElement, scale: number): PdfRect | null => {
+  if (![bounds.left, bounds.top, bounds.width, bounds.height, scale].every(Number.isFinite)
+    || bounds.width <= 0 || bounds.height <= 0 || scale <= 0) return null;
+  const left = Math.max(0, Math.floor(bounds.left * scale));
+  const top = Math.max(0, Math.floor(bounds.top * scale));
+  const right = Math.min(canvas.width, Math.ceil((bounds.left + bounds.width) * scale));
+  const bottom = Math.min(canvas.height, Math.ceil((bounds.top + bounds.height) * scale));
+  if (right <= left || bottom <= top) return null;
+  return { left, top, width: right - left, height: bottom - top };
 };
 
 const normalizeText = (value: string) => {
@@ -147,7 +171,7 @@ const buildPageLines = (
   const positionedItems: PositionedTextItem[] = items.filter((item) => item.str.trim()).map((item) => {
     const transform: number[] = pdfjsLib.Util.transform(viewport.transform, item.transform);
     const fontHeight = Math.max(Math.hypot(transform[2] ?? 0, transform[3] ?? 0), 1);
-    const ascent = styles[item.fontName]?.ascent ?? 0.8;
+    const ascent = getFontAscent(styles[item.fontName]);
     const angle = Math.atan2(transform[1] ?? 0, transform[0] ?? 1);
     const cos = Math.cos(angle);
     const sin = Math.sin(angle);
@@ -169,7 +193,9 @@ const buildPageLines = (
       width: bounds.width, height: fontHeight, bounds,
       fontFamily: styles[item.fontName]?.fontFamily || 'sans-serif',
     };
-  });
+  }).filter((item) => [item.x, item.y, item.width, item.height,
+    item.bounds.left, item.bounds.top, item.bounds.width, item.bounds.height].every(Number.isFinite)
+    && item.bounds.width > 0 && item.bounds.height > 0);
 
   const lines = positionedItems.reduce<PositionedTextItem[][]>((lineGroups, item) => {
     const threshold = Math.max(item.height * 0.55, 3);
@@ -235,14 +261,19 @@ export const readPdfLines = async (file: File) => {
   const loadingTask = pdfjsLib.getDocument({ data: buffer });
   const allLines: PdfLine[] = [];
   const sourcePages: PdfSourcePage[] = [];
+  let stage: PdfReadStage = 'document';
+  let currentPage = 0;
   try {
     const pdf = await loadingTask.promise;
     for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      currentPage = pageNumber;
+      stage = 'page';
       const page = await pdf.getPage(pageNumber);
       const viewport = page.getViewport({ scale: 1 });
       if (!Number.isFinite(viewport.width) || !Number.isFinite(viewport.height) || viewport.width <= 0 || viewport.height <= 0) {
         throw new Error('PDF 页面尺寸无效');
       }
+      stage = 'text';
       const [textContent, annotations] = await Promise.all([page.getTextContent(), page.getAnnotations()]);
       const pageLines = buildPageLines(
         textContent.items.filter((item): item is TextItem => 'str' in item),
@@ -256,18 +287,19 @@ export const readPdfLines = async (file: File) => {
       canvas.width = Math.ceil(renderViewport.width);
       canvas.height = Math.ceil(renderViewport.height);
       try {
+        stage = 'render';
         await page.render({ canvas, viewport: renderViewport }).promise;
         const context = canvas.getContext('2d');
+        stage = 'appearance';
         const lines = pageLines.map((line) => {
           if (!context) return line;
+          const sample = getSampleArea(line.bounds, canvas, scale);
+          if (!sample) return line;
+          const { left, top, width, height } = sample;
           // 取文字左侧邻近像素估计底色，减少彩色底板上的覆盖色差。
-          const x = Math.max(0, Math.min(canvas.width - 1, Math.floor((line.bounds.left - 2) * scale)));
-          const y = Math.max(0, Math.min(canvas.height - 1, Math.floor((line.bounds.top + line.bounds.height / 2) * scale)));
+          const x = Math.max(0, left - Math.ceil(2 * scale));
+          const y = top + Math.floor((height - 1) / 2);
           const [r, g, b] = context.getImageData(x, y, 1, 1).data;
-          const left = Math.max(0, Math.min(canvas.width - 1, Math.floor(line.bounds.left * scale)));
-          const top = Math.max(0, Math.min(canvas.height - 1, Math.floor(line.bounds.top * scale)));
-          const width = Math.max(1, Math.min(canvas.width - left, Math.ceil(line.bounds.width * scale)));
-          const height = Math.max(1, Math.min(canvas.height - top, Math.ceil(line.bounds.height * scale)));
           const pixels = context.getImageData(left, top, width, height).data;
           let color = r + g + b < 384 ? '#ffffff' : '#151b26';
           let maxDifference = 0;
@@ -296,7 +328,14 @@ export const readPdfLines = async (file: File) => {
       }
     }
     return { lines: allLines, pageCount: pdf.numPages, sourcePages };
+  } catch (error) {
+    throw new PdfReadError(stage, currentPage, error);
   } finally {
-    await loadingTask.destroy();
+    // 清理失败不能覆盖最初的解析异常，也不能把已成功读取的文件误判为损坏。
+    try {
+      await loadingTask.destroy();
+    } catch {
+      console.warn('PDF 资源释放失败');
+    }
   }
 };
