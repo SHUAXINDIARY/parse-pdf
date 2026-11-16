@@ -3,10 +3,15 @@ import type { ResumeBlock } from '../types';
 import { getBlockIndentLevel } from '../utils/blocks';
 import { ExportLinks, LinkEditor } from './ResumeLinks';
 
+/** 单个语义块的编辑数据与操作。 */
 type SemanticBlockEditorProps = {
+  /** 当前语义块及其展开状态。 */
   block: ResumeBlock;
+  /** 更新语义块正文。 */
   onChange: (id: string, content: string) => void;
+  /** 更新指定语义块中的链接。 */
   onLinkChange: (blockId: string, linkId: string, url: string) => void;
+  /** 切换语义块的展开状态。 */
   onToggle: (id: string) => void;
 };
 
@@ -16,6 +21,7 @@ export const SemanticBlockEditor = ({
   <section className={`semantic-block semantic-block--${block.type} indent-${getBlockIndentLevel(block)}`}>
     {block.type === 'section' ? (
       <input
+        aria-label="章节标题"
         className="section-title-input"
         value={block.content}
         onChange={(event) => onChange(block.id, event.target.value)}
@@ -33,6 +39,7 @@ export const SemanticBlockEditor = ({
         {block.isOpen ? (
           <>
             <textarea
+              aria-label={`编辑内容：${block.title}`}
               className="semantic-editor"
               value={block.content}
               onChange={(event) => onChange(block.id, event.target.value)}

@@ -1,4 +1,4 @@
-import { FileText, LoaderCircle, Upload } from 'lucide-react';
+import { FileText, LoaderCircle, LockKeyhole, Upload } from 'lucide-react';
 import { FileDropZone } from './components/FileDropZone';
 import { FileUploadButton } from './components/FileUploadButton';
 import { MetricCard } from './components/MetricCard';
@@ -15,19 +15,25 @@ const App = () => {
 
   return (
     <main className="app-shell">
-      <section className="workspace">
+      <section className={`workspace${editor.blocks.length > 0 ? ' workspace--has-document' : ''}`}>
         <header className="topbar">
-          <div>
-            <p className="eyebrow">Resume PDF Parser</p>
-            <h1>PDF 内容解析与实时编辑</h1>
+          <div className="brand">
+            <span className="brand-icon" aria-hidden="true"><FileText size={22} /></span>
+            <div>
+              <h1>PDF 内容解析与实时编辑</h1>
+              <p className="brand-description">解析、编辑，整理每一页内容。</p>
+            </div>
           </div>
-          <FileUploadButton
-            className="primary-action"
-            accept="application/pdf,.pdf"
-            onFile={editor.handleFile}
-          >
-            <Upload size={18} />上传 PDF
-          </FileUploadButton>
+          <div className="topbar-actions">
+            <span className="local-note"><LockKeyhole size={14} aria-hidden="true" />文件仅在本地处理</span>
+            <FileUploadButton
+              className="primary-action"
+              accept="application/pdf,.pdf"
+              onFile={editor.handleFile}
+            >
+              <Upload size={18} aria-hidden="true" />上传 PDF
+            </FileUploadButton>
+          </div>
         </header>
 
         <section className="summary-grid" aria-label="解析状态">
@@ -39,9 +45,13 @@ const App = () => {
 
         {editor.parseState === 'idle' ? (
           <FileDropZone onFile={editor.handleFile}>
-            <FileText size={42} />
+            <span className="upload-icon" aria-hidden="true"><FileText size={32} strokeWidth={1.5} /></span>
             <h2>拖入 PDF 或点击上传</h2>
             <p>解析结果会按语义块组织，并尽量保留 PDF 原始层级和缩进。</p>
+            <FileUploadButton className="primary-action" accept="application/pdf,.pdf" onFile={editor.handleFile}>
+              <Upload size={16} aria-hidden="true" />选择 PDF 文件
+            </FileUploadButton>
+            <span className="upload-hint">支持 PDF 格式 · 在浏览器本地解析</span>
           </FileDropZone>
         ) : null}
         {editor.parseState === 'reading' ? (

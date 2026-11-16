@@ -1,10 +1,16 @@
 import type { ReactNode } from 'react';
 
-type MetricCardProps = { label: string; value: ReactNode };
+/** 文档信息条中的单项指标。 */
+type MetricCardProps = {
+  /** 指标名称。 */
+  label: string;
+  /** 指标值，长字符串通过提示展示完整内容。 */
+  value: ReactNode;
+};
 
 export const MetricCard = ({ label, value }: MetricCardProps) => (
   <div className="metric-panel">
     <span>{label}</span>
-    <strong>{value}</strong>
+    <strong title={typeof value === 'string' ? value : undefined}>{value}</strong>
   </div>
 );
