@@ -7,12 +7,12 @@ import { codeInspectorPlugin } from 'code-inspector-plugin';
 export default defineConfig({
   plugins: [pluginReact()],
   html: {
-    title: 'PDF 简历解析与编辑 | Resume PDF Editor',
+    title: 'PDF 解析与编辑 · 实时预览与多样排版 | PDF Editor',
     meta: {
       description:
-        '在浏览器本地解析 PDF 简历，按语义块实时编辑文本与链接，预览页面内容并导出编辑后的 PDF。',
-      keywords: 'PDF 简历,PDF 解析,PDF 编辑,简历编辑器,语义分块,PDF 导出',
-      'application-name': 'Resume PDF Editor',
+        '在浏览器本地解析 PDF，编辑文字与链接并实时预览。支持原版还原与多种排版样式，可将修改后的内容导出为 PDF。',
+      keywords: 'PDF 解析,PDF 编辑,实时预览,原版还原,PDF 排版,文本编辑,链接编辑,PDF 导出',
+      'application-name': 'PDF Editor',
     },
   },
   tools: {
