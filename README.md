@@ -70,6 +70,23 @@ pnpm run preview
 - PDF 导出通过 `html2canvas` 捕获页面预览，再用 `jsPDF` 生成文件。
 - 导出时会根据 DOM 中的链接位置重新叠加 PDF link annotation。
 
+## 代码结构
+
+- `src/App.tsx`：页面入口，组合通用组件、业务组件和 hooks。
+- `src/components/`：文件选择、拖拽上传、指标卡、面板标题和状态提示；通过 props 传入内容和事件，不依赖简历业务。
+- `src/services/pdf/`：PDF 文本行与链接读取、DOM 页面导出及 PDF 几何类型，不依赖 React 或简历分块规则。
+- `src/features/resume/types.ts`：简历语义块、解析结果和分页视图类型。
+- `src/features/resume/utils/`：简历章节识别、语义分块、文本序列化及解析流程组合。
+- `src/features/resume/hooks/`：编辑状态与操作、PDF 导出状态与预览容器引用。
+- `src/features/resume/components/`：分页预览、语义块编辑、链接编辑和结构化文本面板。
+
+其他 PDF 场景可以直接复用 `readPdfLines(file)` 获取坐标化文本行和链接，
+再应用自己的分块规则。`exportPdfPages(pageElements, fileName)` 接收页面元素列表，
+并根据 `.link-export-target` 元素的 `data-link-url` 恢复可点击链接；导出样式由 `App.css` 中的 `.is-exporting` 规则提供。
+
+语义块内容和链接更新时，编辑状态会同时生成结构化文本。结构化文本支持独立编辑，
+不反向修改语义块；展开、收起操作也不会覆盖独立编辑的文本。
+
 ## 注意事项
 
 - 当前所有解析和导出逻辑都在浏览器本地执行。

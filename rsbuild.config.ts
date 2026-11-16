@@ -1,5 +1,7 @@
 import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
+import { codeInspectorPlugin } from 'code-inspector-plugin';
+
 
 // Docs: https://rsbuild.rs/config/
 export default defineConfig({
@@ -12,5 +14,14 @@ export default defineConfig({
       keywords: 'PDF 简历,PDF 解析,PDF 编辑,简历编辑器,语义分块,PDF 导出',
       'application-name': 'Resume PDF Editor',
     },
+  },
+  tools: {
+    rspack: {
+      plugins: [
+        codeInspectorPlugin({
+          bundler: 'rspack',
+        })
+      ]
+    }
   },
 });
