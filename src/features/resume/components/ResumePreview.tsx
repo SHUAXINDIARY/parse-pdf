@@ -83,16 +83,16 @@ export const ResumePreview = ({
                 aria-label={`第 ${page.page} 页`}
               >
                 <div className="reflow-page-content" style={{ minHeight: `${page.height / page.width * 100}cqw` }}>
-                  {page.blocks.map((block) => (
+                  {page.blocks.filter((block) => block.content || block.links.some((link) => link.url)).map((block) => (
                     <section className={`layout-block layout-block--${block.type}`} key={block.id}>
                       <button
                         type="button" className={`layout-content${selectedId === block.id ? ' is-selected' : ''}`}
                         onClick={() => setSelectedId(block.id)} disabled={exporting}
                         aria-label={`编辑：${block.title}`} aria-pressed={selectedId === block.id}
                       >{block.content}</button>
-                      {block.links.length > 0 ? (
+                      {block.links.some((link) => link.url) ? (
                         <div className="layout-links">
-                          {block.links.map((link) => (
+                          {block.links.filter((link) => link.url).map((link) => (
                             <a className="link-export-target" data-link-url={link.url} href={link.url} target="_blank" rel="noreferrer" key={link.id}>{link.url}</a>
                           ))}
                         </div>

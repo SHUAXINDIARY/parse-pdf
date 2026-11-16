@@ -3,7 +3,9 @@ import { extractPdfBlocks } from '../utils/extractPdfBlocks';
 import type { PdfSourcePage } from '../../../services/pdf/types';
 import { getPdfErrorMessage, getPdfErrorName, PdfReadError } from '../../../services/pdf/errors';
 import type { ParsedPdf, ParseState, ResumeBlock } from '../types';
-import { createTitle, stringifyBlocks } from '../utils/blocks';
+import { createTitle } from '../utils/blocks';
+import { applyStructuredTextEdit, serializeStructuredText } from '../utils/structuredText';
+import type { StructuredTextRange } from '../utils/structuredText';
 
 /** 编辑器状态，原始页面和可编辑数据分开存储。 */
 type EditorState = {
@@ -13,8 +15,10 @@ type EditorState = {
   fileName: string;
   /** 可编辑语义块。 */
   blocks: ResumeBlock[];
-  /** 可独立编辑的结构化文本。 */
+  /** 当前结构化文本，与预览双向同步。 */
   rawText: string;
+  /** 文本偏移到原始语义块的映射。 */
+  textRanges: StructuredTextRange[];
   /** 总页数，包括纯图片页。 */
   pageCount: number;
   /** 解析进度状态。 */
@@ -39,6 +43,7 @@ const initialState: EditorState = {
   fileName: '',
   blocks: [],
   rawText: '',
+  textRanges: [],
   pageCount: 0,
   parseState: 'idle',
   error: '',
@@ -49,15 +54,16 @@ const editorReducer = (state: EditorState, action: EditorAction): EditorState =>
     case 'reading':
       return { ...state, fileName: action.fileName, parseState: 'reading', error: '' };
     case 'loaded':
-      return { ...state, ...action.result, parseState: 'done' };
+      return { ...state, ...action.result, ...serializeStructuredText(action.result.blocks), parseState: 'done' };
     case 'failed':
       return {
         ...state,
-        ...(action.clearDocument ? { blocks: [], rawText: '', pageCount: 0, sourcePages: [] } : {}),
+        ...(action.clearDocument ? { blocks: [], rawText: '', textRanges: [], pageCount: 0, sourcePages: [] } : {}),
         parseState: 'error', error: action.error,
       };
     case 'rawText':
-      return { ...state, rawText: action.value };
+      return { ...state, rawText: action.value,
+        ...applyStructuredTextEdit(state.blocks, state.textRanges, state.rawText, action.value) };
     case 'content': {
       const blocks = state.blocks.map((block, index) =>
         block.id === action.id
@@ -70,7 +76,7 @@ const editorReducer = (state: EditorState, action: EditorAction): EditorState =>
             }
           : block,
       );
-      return { ...state, blocks, rawText: stringifyBlocks(blocks) };
+      return { ...state, blocks, ...serializeStructuredText(blocks) };
     }
     case 'link': {
       if (!state.blocks.some((block) => block.id === action.blockId)) return state;
@@ -84,7 +90,7 @@ const editorReducer = (state: EditorState, action: EditorAction): EditorState =>
             }
           : block,
       );
-      return { ...state, blocks, rawText: stringifyBlocks(blocks) };
+      return { ...state, blocks, ...serializeStructuredText(blocks) };
     }
     case 'toggle':
       return {

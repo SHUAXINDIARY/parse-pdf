@@ -113,8 +113,8 @@ export const stringifyBlocks = (blocks: ResumeBlock[]) => {
   return blocks
     .map((block) => {
       const linkText =
-        block.links.length > 0
-          ? `\n${block.links.map((link) => `[${link.label}](${link.url})`).join('\n')}`
+        block.links.some((link) => link.url)
+          ? `\n${block.links.filter((link) => link.url).map((link) => `[${link.label}](${link.url})`).join('\n')}`
           : '';
       return block.type === 'section' ? `# ${block.content}${linkText}` : `${block.content}${linkText}`;
     })

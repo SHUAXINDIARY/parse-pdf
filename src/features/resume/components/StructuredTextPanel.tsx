@@ -5,13 +5,13 @@ import { PanelHeading } from '../../../components/PanelHeading';
 type StructuredTextPanelProps = {
   /** 当前结构化文本。 */
   value: string;
-  /** 独立更新文本，不反向修改语义块。 */
+  /** 实时更新文本及预览中的语义块。 */
   onChange: (value: string) => void;
 };
 
 export const StructuredTextPanel = ({ value, onChange }: StructuredTextPanelProps) => (
   <aside className="raw-panel">
-    <PanelHeading title="结构化文本" description="用于对照语义块解析结果。" compact>
+    <PanelHeading title="结构化文本" description="修改文字和链接，实时同步到左侧预览。" compact>
       <Save size={18} />
     </PanelHeading>
     <textarea aria-label="结构化文本" className="raw-textarea" value={value} onChange={(event) => onChange(event.target.value)} />

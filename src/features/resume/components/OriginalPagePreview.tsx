@@ -119,7 +119,9 @@ export const OriginalPagePreview = ({ page, selectedId, disabled, onSelect, onOv
       {editableBlocks.filter((block) => block.content !== block.originalContent).map((block) => (
         <TextReplacement key={block.id} block={block} page={page} onOverflow={onOverflow} />
       ))}
-      {page.links.map((link) => (
+      {Array.from(new Map([...page.links, ...page.blocks.flatMap((block) => block.links)]
+        .map((link) => [link.id, currentLinks.get(link.id) ?? link])).values())
+        .filter((link) => link.url).map((link) => (
         <a key={link.id} className="original-link link-export-target" style={rectStyle(link.bounds, page)}
           href={(currentLinks.get(link.id) ?? link).url} data-link-url={(currentLinks.get(link.id) ?? link).url}
           target="_blank" rel="noreferrer" aria-label={`打开链接：${link.label}`} tabIndex={-1} />
