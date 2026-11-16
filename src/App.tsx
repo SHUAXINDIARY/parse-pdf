@@ -15,7 +15,7 @@ const App = () => {
 
   return (
     <main className="app-shell">
-      <section className={`workspace${editor.blocks.length > 0 ? ' workspace--has-document' : ''}`}>
+      <section className={`workspace${editor.pageCount > 0 ? ' workspace--has-document' : ''}`}>
         <header className="topbar">
           <div className="brand">
             <span className="brand-icon" aria-hidden="true"><FileText size={22} /></span>
@@ -63,7 +63,7 @@ const App = () => {
           <StatusPanel icon={<FileText size={24} />} error>{editor.error}</StatusPanel>
         ) : null}
 
-        {editor.blocks.length > 0 ? (
+        {editor.pageCount > 0 ? (
           <section className="editor-layout">
             <ResumePreview
               pages={editor.pages}
@@ -71,11 +71,8 @@ const App = () => {
               exportState={exportState}
               exportError={exportError}
               onExport={exportPdf}
-              onExpandAll={editor.expandAll}
-              onCollapseAll={editor.collapseAll}
               onBlockChange={editor.updateBlock}
               onLinkChange={editor.updateBlockLink}
-              onToggleBlock={editor.toggleBlock}
             />
             <StructuredTextPanel value={editor.rawText} onChange={editor.setRawText} />
           </section>

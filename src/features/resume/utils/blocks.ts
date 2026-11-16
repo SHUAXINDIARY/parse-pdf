@@ -29,6 +29,9 @@ const isContentStarter = (line: ResumeLine, currentLines: ResumeLine[]) => {
   }
 
   const previousLine = currentLines[currentLines.length - 1];
+  // 页边界与同基线的独立列始终分块，避免跨页归属错误和双栏相互覆盖。
+  if (previousLine.page !== line.page || Math.abs(previousLine.y - line.y) < 3
+    || Math.abs(previousLine.x - line.x) > Math.max(line.height * 2, 24)) return true;
   const verticalGap = Math.abs(previousLine.y - line.y);
   const startsAtRoot = line.x <= 38;
   const startsNumberedItem = /^\d+[.、]/.test(line.text);
@@ -63,7 +66,8 @@ const createBlock = (
     content,
     originalContent: content,
     indent,
-    links,
+    sourceLines: lines,
+    links: Array.from(new Map(links.map((link) => [link.id, link])).values()),
     isOpen: type !== 'section',
   };
 };

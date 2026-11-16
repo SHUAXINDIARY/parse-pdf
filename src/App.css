@@ -186,3 +186,64 @@ textarea:focus { border-color: var(--color-accent); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+/* 排版选择与内容编辑属于工具区，不进入纸张导出范围。 */
+.layout-options { flex: none; border-bottom: 1px solid var(--color-line); padding: 12px 24px; background: #fff; }
+.layout-picker { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.layout-picker-label { margin-right: 8px; color: var(--color-muted); font-size: 0.75rem; }
+.layout-picker button { min-height: 32px; border: 1px solid transparent; border-radius: 4px; padding: 4px 12px; color: var(--color-text); background: #f1f4f8; font-size: 0.75rem; }
+.layout-picker button:hover { background: #e6edf6; }
+.layout-picker button[aria-pressed="true"] { border-color: #b6d0ee; color: #1259aa; background: #eaf3ff; font-weight: 600; }
+.layout-picker button:disabled { cursor: not-allowed; opacity: 0.6; }
+.block-inspector { flex: none; max-height: 34vh; overflow: auto; border-bottom: 1px solid var(--color-line); padding: 12px 24px 16px; background: #f8faff; }
+.block-inspector-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; font-size: 0.8125rem; }
+.block-inspector-heading strong { font-weight: 600; }
+.block-inspector-heading span { margin-left: 8px; color: var(--color-muted); font-size: 0.75rem; font-weight: 400; }
+.block-inspector-heading button { display: grid; width: 32px; height: 32px; place-items: center; border: 0; border-radius: 4px; color: var(--color-muted); background: transparent; }
+.block-inspector-heading button:hover { background: #e6edf6; }
+.block-inspector fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
+.block-inspector textarea { min-height: 72px; font-size: 0.875rem; }
+.resume-page-group { flex: none; width: min(880px, 100%); }
+.preview-page-label { margin-bottom: 10px; color: var(--color-muted); font-size: 0.6875rem; font-variant-numeric: tabular-nums; }
+.resume-page-group .resume-page { width: 100%; }
+.resume-page--original { container-type: inline-size; min-height: 0; border: 0; padding: 0; }
+.original-page-image { display: block; width: 100%; height: 100%; }
+.original-block-target, .original-link, .original-text-mask, .original-text-replacement { position: absolute; }
+.original-block-target { z-index: 2; min-width: 4px; min-height: 4px; border: 1px solid transparent; border-radius: 0; padding: 0; background: transparent; }
+.original-block-target:hover { border-color: #87afe0; background: #1767c508; }
+.original-block-target.is-selected { border-color: var(--color-accent); }
+.original-block-target:disabled { cursor: wait; }
+.original-link { z-index: 1; }
+.original-text-mask { pointer-events: none; }
+.original-text-replacement { overflow: hidden; color: #151b26; line-height: 1.15; white-space: pre-wrap; overflow-wrap: anywhere; pointer-events: none; }
+.resume-page--reflow { container-type: inline-size; min-height: 0; padding: 0; }
+.reflow-page-content { padding: 6cqw; }
+.layout-block { margin-top: 16px; }
+.layout-block:first-child { margin-top: 0; }
+.layout-content { display: block; width: 100%; border: 0; border-radius: 2px; padding: 0; color: #263243; background: transparent; font-size: 14px; line-height: 1.75; text-align: start; white-space: pre-wrap; overflow-wrap: anywhere; cursor: text; }
+.layout-content:hover { background: #f3f7fc; }
+.layout-content.is-selected { outline: 1px solid #b6d0ee; outline-offset: 4px; }
+.layout-content:disabled { opacity: 1; cursor: wait; }
+.layout-block--section { margin-top: 28px; border-bottom: 1px solid #dce2ea; padding-bottom: 7px; }
+.layout-block--section .layout-content { color: #1f3655; font-size: 17px; font-weight: 700; line-height: 1.5; }
+.layout-block--profile .layout-content { color: #1a2c44; font-size: 16px; line-height: 1.65; }
+.layout-links { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 6px; }
+.layout-links a { color: #1767c5; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; text-underline-offset: 3px; }
+.resume-page--compact .reflow-page-content { padding: 4cqw 5cqw; }
+.resume-page--compact .layout-block { margin-top: 9px; }
+.resume-page--compact .layout-block:first-child { margin-top: 0; }
+.resume-page--compact .layout-content { font-size: 12px; line-height: 1.5; }
+.resume-page--compact .layout-block--section { margin-top: 18px; padding-bottom: 4px; }
+.resume-page--compact .layout-block--section .layout-content { font-size: 15px; }
+.resume-page--compact .layout-block--profile .layout-content { font-size: 14px; }
+.resume-page--editorial .reflow-page-content { padding: 8cqw; }
+.resume-page--editorial .layout-block { margin-top: 24px; }
+.resume-page--editorial .layout-block:first-child { margin-top: 0; }
+.resume-page--editorial .layout-content { font-size: 15px; line-height: 1.95; }
+.resume-page--editorial .layout-block--section { margin-top: 36px; border-bottom: 0; padding-bottom: 0; }
+.resume-page--editorial .layout-block--section .layout-content { color: #182b44; font-size: 21px; font-weight: 700; line-height: 1.5; }
+.resume-page--editorial .layout-block--profile .layout-content { font-size: 18px; }
+/* 只去除编辑选区，保留原版图像、替换正文和链接注释的几何范围。 */
+.is-exporting .original-block-target { display: none; }
+.is-exporting .layout-content { outline: 0; background: transparent; }
+.layout-picker-note { flex-basis: 100%; margin-top: 2px; color: var(--color-muted); font-size: 0.75rem; line-height: 1.5; }
