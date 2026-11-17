@@ -8,7 +8,17 @@ export type { PdfLink as ResumeLink, PdfLine as ResumeLine } from '../../service
 /** 简历内容角色。 */
 export type ResumeBlockType = 'profile' | 'section' | 'content';
 /** 排版预设，原版为默认模式。 */
-export type ResumeLayout = 'original' | 'classic' | 'compact' | 'editorial';
+export type ResumeLayout = 'original' | 'markdown' | 'classic' | 'compact' | 'editorial';
+
+/** 单页 Markdown 草稿，与普通文本编辑独立保存。 */
+export type MarkdownDraft = {
+  /** 原始页码。 */
+  page: number;
+  /** 支持受限 HTML 样式的 Markdown 源码。 */
+  source: string;
+  /** 首次进入时的基线，用于显示已修改页数。 */
+  originalSource: string;
+};
 
 /** 可编辑的语义块，保留来源行以便原版定位。 */
 export type ResumeBlock = {

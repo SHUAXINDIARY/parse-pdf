@@ -247,3 +247,52 @@ textarea:focus { border-color: var(--color-accent); }
 .is-exporting .original-block-target { display: none; }
 .is-exporting .layout-content { outline: 0; background: transparent; }
 .layout-picker-note { flex-basis: 100%; margin-top: 2px; color: var(--color-muted); font-size: 0.75rem; line-height: 1.5; }
+
+/* Markdown 编辑工具位于纸张外；沿用结构化编辑区的字号、分隔线和独立滚动。 */
+.markdown-editor-options { display: flex; flex: none; flex-wrap: wrap; gap: 12px; padding: 16px 24px 10px; }
+.markdown-editor-options label { display: flex; flex: 1; min-width: 110px; flex-direction: column; gap: 6px; color: var(--color-muted); font-size: 0.75rem; }
+.markdown-editor-options select { width: 100%; min-height: 34px; border: 1px solid var(--color-line); border-radius: 4px; padding: 4px 8px; color: var(--color-text); background: var(--color-surface); font: inherit; }
+.markdown-editor-note { flex: none; padding: 0 24px 12px; border-bottom: 1px solid var(--color-line); color: var(--color-muted); font-size: 0.75rem; line-height: 1.7; }
+.markdown-editor .raw-textarea { line-height: 1.75; tab-size: 2; }
+.markdown-editor .raw-textarea:disabled { background: #f8fafc; cursor: wait; }
+.markdown-help { flex: none; max-height: 30vh; overflow: auto; border-top: 1px solid var(--color-line); padding: 12px 24px; color: var(--color-muted); font-size: 0.75rem; line-height: 1.7; }
+.markdown-help summary { cursor: pointer; color: var(--color-text); }
+.markdown-help p { margin-top: 8px; }
+.markdown-help code { color: #244d7c; overflow-wrap: anywhere; }
+
+/* 容器隔离与裁切把用户样式限制在单页内，纸张高度由实际内容测量扩展。 */
+.resume-page--markdown { container-type: inline-size; isolation: isolate; overflow: hidden; min-height: 0; padding: 0; border: 0; }
+.markdown-content { position: relative; display: flow-root; width: 100%; color: #202c3e; font-size: 1.8cqw; line-height: 1.6; overflow-wrap: anywhere; }
+.markdown-content > :not(.markdown-original-graphic) { position: relative; }
+.markdown-content p { margin: 0 0 0.8em; }
+.markdown-content h1, .markdown-content h2, .markdown-content h3,
+.markdown-content h4, .markdown-content h5, .markdown-content h6 { margin: 0.9em 0 0.4em; font-weight: 700; line-height: 1.25; letter-spacing: normal; }
+.markdown-content h1 { font-size: 2em; }
+.markdown-content h2 { font-size: 1.5em; }
+.markdown-content h3 { font-size: 1.25em; }
+.markdown-content ul, .markdown-content ol { margin-block: 0.5em; padding-left: 1.6em; }
+.markdown-content li > p { margin-bottom: 0.25em; }
+.markdown-content a { color: inherit; text-underline-offset: 0.15em; }
+.markdown-content img { display: inline-block; max-width: 100%; height: auto; vertical-align: middle; }
+.markdown-content blockquote { margin: 0.8em 0; border-left: 1px solid #829bb8; padding-left: 1em; }
+.markdown-content pre { margin-block: 0.8em; padding: 0.8em; background: #f1f4f8; white-space: pre-wrap; }
+.markdown-content code { font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.9em; }
+.markdown-content table { width: 100%; margin-block: 0.8em; border-collapse: collapse; }
+.markdown-content th, .markdown-content td { border: 1px solid #c5cfdb; padding: 0.4em 0.6em; text-align: left; }
+.markdown-content hr { margin-block: 1em; border: 0; border-top: 1px solid #c5cfdb; }
+.markdown-original-graphic { position: absolute; top: 0; left: 0; width: 100%; pointer-events: none; }
+.markdown-original-graphic p { margin: 0; }
+.markdown-original-graphic img { display: block; width: 100%; }
+.markdown-original-canvas { position: relative; }
+.markdown-source-line { z-index: 1; }
+.resume-page--markdown:not(.markdown-reflow) .markdown-source-line { background-color: transparent !important; }
+.markdown-source-line > :first-child { margin-top: 0; }
+.markdown-source-line > :last-child { margin-bottom: 0; }
+.markdown-image-error { display: inline-block; padding: 0.5em; color: #a0372f; background: #fff4f1; font-size: 0.9em; }
+/* 自动重排取消原行的几何约束；底图的装饰位置不适用于新的文字布局。 */
+.markdown-reflow .markdown-content { padding: 4cqw; }
+.markdown-reflow .markdown-original-canvas { min-height: 0 !important; }
+.markdown-reflow.markdown-has-text .markdown-original-graphic { display: none; }
+.markdown-reflow .markdown-source-line { position: static !important; width: auto !important; height: auto !important; margin-bottom: 0.4em; line-height: 1.5 !important; }
+.markdown-reflow .markdown-original-canvas > a:empty { position: static !important; display: block; width: auto !important; height: auto !important; margin-top: 0.4em; }
+.markdown-reflow .markdown-original-canvas > a:empty::after { content: attr(aria-label); }

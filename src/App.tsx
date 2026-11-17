@@ -5,6 +5,7 @@ import { MetricCard } from './components/MetricCard';
 import { StatusPanel } from './components/StatusPanel';
 import { ResumePreview } from './features/resume/components/ResumePreview';
 import { StructuredTextPanel } from './features/resume/components/StructuredTextPanel';
+import { MarkdownEditorPanel } from './features/resume/components/MarkdownEditorPanel';
 import { usePdfExport } from './features/resume/hooks/usePdfExport';
 import { useResumeEditor } from './features/resume/hooks/useResumeEditor';
 import './App.css';
@@ -40,7 +41,8 @@ const App = () => {
           <MetricCard label="文件" value={editor.fileName || '未上传'} />
           <MetricCard label="页数" value={editor.pageCount || '-'} />
           <MetricCard label="语义块" value={editor.blocks.length || '-'} />
-          <MetricCard label="已修改块" value={editor.editedCount || '-'} />
+          <MetricCard label={editor.layout === 'markdown' ? 'MD 已修改页' : '已修改块'}
+            value={(editor.layout === 'markdown' ? editor.editedMarkdownPageCount : editor.editedCount) || '-'} />
         </section>
 
         {editor.parseState === 'idle' ? (
@@ -67,6 +69,10 @@ const App = () => {
           <section className="editor-layout">
             <ResumePreview
               pages={editor.pages}
+              layout={editor.layout}
+              onLayoutChange={editor.setLayout}
+              markdownDrafts={editor.markdownDrafts}
+              markdownReflow={editor.markdownReflow}
               pagesRef={pagesRef}
               exportState={exportState}
               exportError={exportError}
@@ -74,7 +80,10 @@ const App = () => {
               onBlockChange={editor.updateBlock}
               onLinkChange={editor.updateBlockLink}
             />
-            <StructuredTextPanel value={editor.rawText} onChange={editor.setRawText} />
+            {editor.layout === 'markdown' ? (
+              <MarkdownEditorPanel drafts={editor.markdownDrafts} disabled={exportState === 'exporting'}
+                reflow={editor.markdownReflow} onChange={editor.updateMarkdown} onReflowChange={editor.setMarkdownReflow} />
+            ) : <StructuredTextPanel value={editor.rawText} onChange={editor.setRawText} />}
           </section>
         ) : null}
       </section>

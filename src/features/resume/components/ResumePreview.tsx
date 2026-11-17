@@ -2,7 +2,8 @@ import { useCallback, useState } from 'react';
 import type { Ref } from 'react';
 import { Download, LoaderCircle } from 'lucide-react';
 import { PanelHeading } from '../../../components/PanelHeading';
-import type { ExportState, ResumeLayout, ResumePage } from '../types';
+import type { ExportState, MarkdownDraft, ResumeLayout, ResumePage } from '../types';
+import { MarkdownPagePreview } from './MarkdownPagePreview';
 import { OriginalPagePreview } from './OriginalPagePreview';
 import { ResumeBlockInspector } from './ResumeBlockInspector';
 import { ResumeLayoutPicker } from './ResumeLayoutPicker';
@@ -11,6 +12,14 @@ import { ResumeLayoutPicker } from './ResumeLayoutPicker';
 type ResumePreviewProps = {
   /** 页面和当前编辑内容。 */
   pages: ResumePage[];
+  /** 当前排版，由页面统一管理以同步源码编辑区。 */
+  layout: ResumeLayout;
+  /** 切换当前预览及导出版式。 */
+  onLayoutChange: (layout: ResumeLayout) => void;
+  /** 各页 Markdown 独立草稿。 */
+  markdownDrafts: MarkdownDraft[];
+  /** Markdown 是否使用自然流排版。 */
+  markdownReflow: boolean;
   /** 导出服务读取的页面容器。 */
   pagesRef: Ref<HTMLDivElement>;
   /** 导出状态。 */
@@ -26,9 +35,9 @@ type ResumePreviewProps = {
 };
 
 export const ResumePreview = ({
-  pages, pagesRef, exportState, exportError, onExport, onBlockChange, onLinkChange,
+  pages, layout, onLayoutChange, markdownDrafts, markdownReflow,
+  pagesRef, exportState, exportError, onExport, onBlockChange, onLinkChange,
 }: ResumePreviewProps) => {
-  const [layout, setLayout] = useState<ResumeLayout>('original');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [overflowIds, setOverflowIds] = useState<Set<string>>(() => new Set());
   const blocks = pages.flatMap((page) => page.blocks);
@@ -49,7 +58,7 @@ export const ResumePreview = ({
 
   return (
     <div className="items-panel">
-      <PanelHeading title="PDF 版式预览" description="点击页面内容编辑，导出使用当前排版样式。">
+      <PanelHeading title="PDF 版式预览" description={layout === 'markdown' ? '在右侧编辑 Markdown，导出使用当前预览。' : '点击页面内容编辑，导出使用当前排版样式。'}>
         <div className="toolbar">
           <button className="export-action" disabled={exporting || overflow} onClick={onExport}>
             {exporting ? <LoaderCircle className="spin" size={16} /> : <Download size={16} />}
@@ -58,13 +67,13 @@ export const ResumePreview = ({
         </div>
       </PanelHeading>
       <div className="layout-options">
-        <ResumeLayoutPicker value={layout} disabled={exporting} onChange={setLayout} />
+        <ResumeLayoutPicker value={layout} disabled={exporting} onChange={onLayoutChange} />
       </div>
       {exportState === 'error' ? <div className="inline-error" role="alert">{exportError}</div> : null}
       {overflow ? (
         <div className="inline-error" role="alert">修改内容超出原版区域，请精简内容或切换到重排样式后导出。</div>
       ) : null}
-      {selectedBlock ? (
+      {selectedBlock && layout !== 'markdown' ? (
         <ResumeBlockInspector
           block={selectedBlock} disabled={exporting} onChange={onBlockChange}
           onLinkChange={onLinkChange} onClose={() => setSelectedId(null)}
@@ -74,7 +83,9 @@ export const ResumePreview = ({
         {pages.map((page) => (
           <div className="resume-page-group" key={page.page}>
             <div className="preview-page-label">第 {page.page} 页</div>
-            {layout === 'original' || page.blocks.length === 0 ? (
+            {layout === 'markdown' ? (
+              <MarkdownPagePreview page={page} source={markdownDrafts.find((draft) => draft.page === page.page)?.source ?? ''} reflow={markdownReflow} />
+            ) : layout === 'original' || page.blocks.length === 0 ? (
               <OriginalPagePreview page={page} selectedId={selectedId} disabled={exporting} onSelect={setSelectedId} onOverflow={onOverflow} />
             ) : (
               <article

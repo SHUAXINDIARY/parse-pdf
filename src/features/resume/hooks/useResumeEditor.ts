@@ -2,13 +2,20 @@ import { useMemo, useReducer, useRef } from 'react';
 import { extractPdfBlocks } from '../utils/extractPdfBlocks';
 import type { PdfSourcePage } from '../../../services/pdf/types';
 import { getPdfErrorMessage, getPdfErrorName, PdfReadError } from '../../../services/pdf/errors';
-import type { ParsedPdf, ParseState, ResumeBlock } from '../types';
+import type { MarkdownDraft, ParsedPdf, ParseState, ResumeBlock, ResumeLayout } from '../types';
+import { createMarkdownDrafts } from '../utils/markdown';
 import { createTitle } from '../utils/blocks';
 import { applyStructuredTextEdit, serializeStructuredText } from '../utils/structuredText';
 import type { StructuredTextRange } from '../utils/structuredText';
 
 /** 编辑器状态，原始页面和可编辑数据分开存储。 */
 type EditorState = {
+  /** 当前预览与导出版式。 */
+  layout: ResumeLayout;
+  /** 首次进入时生成的逐页 Markdown 独立草稿。 */
+  markdownDrafts: MarkdownDraft[];
+  /** 是否将 Markdown 从原位定位切换为自然流排版。 */
+  markdownReflow: boolean;
   /** 各页原始图像、尺寸和链接。 */
   sourcePages: PdfSourcePage[];
   /** 当前文件名。 */
@@ -29,6 +36,9 @@ type EditorState = {
 
 /** 编辑器状态更新事件。 */
 type EditorAction =
+  | { type: 'layout'; value: ResumeLayout }
+  | { type: 'markdown'; page: number; source: string }
+  | { type: 'markdownReflow'; value: boolean }
   | { type: 'reading'; fileName: string }
   | { type: 'loaded'; result: ParsedPdf }
   | { type: 'failed'; error: string; clearDocument: boolean }
@@ -39,6 +49,9 @@ type EditorAction =
   | { type: 'rawText'; value: string };
 
 const initialState: EditorState = {
+  layout: 'original',
+  markdownDrafts: [],
+  markdownReflow: false,
   sourcePages: [],
   fileName: '',
   blocks: [],
@@ -51,14 +64,26 @@ const initialState: EditorState = {
 
 const editorReducer = (state: EditorState, action: EditorAction): EditorState => {
   switch (action.type) {
+    case 'layout':
+      return { ...state, layout: action.value,
+        markdownDrafts: action.value === 'markdown' && state.markdownDrafts.length === 0
+          ? createMarkdownDrafts(state.sourcePages.map((page) => ({ ...page,
+            blocks: state.blocks.filter((block) => block.page === page.page) }))) : state.markdownDrafts };
+    case 'markdown':
+      return { ...state, markdownDrafts: state.markdownDrafts.map((draft) =>
+        draft.page === action.page ? { ...draft, source: action.source } : draft) };
+    case 'markdownReflow':
+      return { ...state, markdownReflow: action.value };
     case 'reading':
       return { ...state, fileName: action.fileName, parseState: 'reading', error: '' };
     case 'loaded':
-      return { ...state, ...action.result, ...serializeStructuredText(action.result.blocks), parseState: 'done' };
+      return { ...state, ...action.result, ...serializeStructuredText(action.result.blocks), parseState: 'done',
+        layout: 'original', markdownDrafts: [], markdownReflow: false };
     case 'failed':
       return {
         ...state,
-        ...(action.clearDocument ? { blocks: [], rawText: '', textRanges: [], pageCount: 0, sourcePages: [] } : {}),
+        ...(action.clearDocument ? { blocks: [], rawText: '', textRanges: [], pageCount: 0, sourcePages: [],
+          layout: 'original' as const, markdownDrafts: [], markdownReflow: false } : {}),
         parseState: 'error', error: action.error,
       };
     case 'rawText':
@@ -117,6 +142,7 @@ export const useResumeEditor = () => {
   const editedCount = useMemo(() => state.blocks.filter(
     (block) => block.content.trim() !== block.originalContent.trim(),
   ).length, [state.blocks]);
+  const editedMarkdownPageCount = state.markdownDrafts.filter((draft) => draft.source !== draft.originalSource).length;
   const pages = useMemo(() => state.sourcePages.map((sourcePage) => ({
     ...sourcePage,
     blocks: state.blocks.filter((block) => block.page === sourcePage.page),
@@ -146,7 +172,10 @@ export const useResumeEditor = () => {
   };
 
   return {
-    ...state, editedCount, pages, handleFile,
+    ...state, editedCount, editedMarkdownPageCount, pages, handleFile,
+    setLayout: (value: ResumeLayout) => dispatch({ type: 'layout', value }),
+    updateMarkdown: (page: number, source: string) => dispatch({ type: 'markdown', page, source }),
+    setMarkdownReflow: (value: boolean) => dispatch({ type: 'markdownReflow', value }),
     updateBlock: (id: string, content: string) => dispatch({ type: 'content', id, content }),
     updateBlockLink: (blockId: string, linkId: string, url: string) =>
       dispatch({ type: 'link', blockId, linkId, url }),

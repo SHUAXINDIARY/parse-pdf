@@ -62,6 +62,8 @@ export type PdfSourcePage = {
   height: number;
   /** 高分辨率页面图像，保留原始字形、颜色和图形。 */
   imageUrl: string;
+  /** 去除可识别文字后的图片与装饰底图，供 Markdown 叠加可编辑文字。 */
+  graphicsUrl: string;
   /** 包括未能匹配文字的所有页面链接。 */
   links: PdfLink[];
 };

@@ -12,6 +12,11 @@ export const usePdfExport = (fileName: string) => {
       pagesRef.current?.querySelectorAll<HTMLElement>('.resume-page') ?? [],
     );
     if (pageElements.length === 0) return;
+    if (pageElements.some((page) => page.querySelector('[data-export-error="image"]'))) {
+      setExportState('error');
+      setExportError('部分图片无法加载，请修改或删除对应图片地址后再导出。外部图片需允许跨域访问。');
+      return;
+    }
 
     setExportState('exporting');
     setExportError('');

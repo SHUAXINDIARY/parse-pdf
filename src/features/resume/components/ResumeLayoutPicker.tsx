@@ -3,6 +3,7 @@ import type { ResumeLayout } from '../types';
 /** 各预设的名称和面向用户的排版说明。 */
 export const RESUME_LAYOUTS: { id: ResumeLayout; label: string; description: string }[] = [
   { id: 'original', label: '原版还原', description: '保留原始页面、字体、图片及文字位置；点击文字区域编辑。' },
+  { id: 'markdown', label: 'Markdown', description: '使用 Markdown 编辑独立草稿，初始保留原页字号、颜色、位置、链接与图片底图。' },
   { id: 'classic', label: '经典简历', description: '按文字内容重排，使用清晰的章节分隔与均衡留白。' },
   { id: 'compact', label: '紧凑高效', description: '缩小段落间距和页边距，适合信息较多的内容。' },
   { id: 'editorial', label: '舒朗阅读', description: '放大章节标题，增加行距和留白，适合阅读与审阅。' },

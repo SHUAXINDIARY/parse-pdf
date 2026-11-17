@@ -319,8 +319,18 @@ export const readPdfLines = async (file: File) => {
           return { ...line, background: `rgb(${r}, ${g}, ${b})`, color };
         });
         allLines.push(...attachLinksToLines(lines, pageLinks));
+        const imageUrl = canvas.toDataURL('image/png');
+        // 先保存完整原稿，再以采样底色遮去文字；图片和装饰无需重新解析或远程上传。
+        // 复杂纹理底色只能近似修补，扫描页没有可识别文字时保留整页图像。
+        if (context) {
+          lines.forEach((line) => {
+            context.fillStyle = line.background;
+            context.fillRect((line.bounds.left - 1) * scale, (line.bounds.top - 1) * scale,
+              (line.bounds.width + 2) * scale, (line.bounds.height + 2) * scale);
+          });
+        }
         sourcePages.push({ page: pageNumber, width: viewport.width, height: viewport.height,
-          imageUrl: canvas.toDataURL('image/png'), links: pageLinks });
+          imageUrl, graphicsUrl: lines.length ? canvas.toDataURL('image/png') : imageUrl, links: pageLinks });
       } finally {
         canvas.width = 0;
         canvas.height = 0;
